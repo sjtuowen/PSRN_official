@@ -10,7 +10,7 @@ import sympy as sp
 import random
 import itertools
 from collections import Counter
-from utils.exprutils import has_nested_func
+from ...utils.exprutils import has_nested_func
 MAX_LEN_SET = 1000
 SAMPLE_PROB = 0.5
 SAMPLE_PROB_CROSS_VAR = 0.5

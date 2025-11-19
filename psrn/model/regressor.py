@@ -23,9 +23,9 @@ from symengine import sympify as se_sympify
 import yaml
 
 
-from utils.data import expr_to_Y_pred
-from utils.evaluate import get_sympy_complexity
-from utils.exprutils import time_limit, TimeoutException, has_nested_func
+from ..utils.data import expr_to_Y_pred
+from ..utils.evaluate import get_sympy_complexity
+from ..utils.exprutils import time_limit, TimeoutException, has_nested_func
 
 from .token_generator.gp import GP_TokenGenerator
 
@@ -1468,9 +1468,6 @@ class PSRN_Regressor(nn.Module):
             return expr_best_ls, MSE_min_ls
 
     def get_gs_X(self, g_list, variables, X):
-
-        # from utils.data import expr_to_Y_pred
-        
 
         """get the base expressions' data (gs)
 

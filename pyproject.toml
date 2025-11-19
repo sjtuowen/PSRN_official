@@ -42,5 +42,9 @@ dependencies = [
 "Homepage" = "https://github.com/intell-sci-comput/PTS"
 "Paper" = "https://arxiv.org/abs/2407.04405"
 
+[tool.setuptools.packages.find]
+include = ["psrn*"]
+exclude = ["assets*"]
+
 [tool.setuptools.package-data]
 "psrn_lib" = ["**/*.npy", "**/*.csv"]
