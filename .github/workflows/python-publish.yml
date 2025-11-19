@@ -1,0 +1,27 @@
+name: Python Package Test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"] # 自动覆盖主流版本
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build pytest
+        pip install .
+        
+    - name: Run simple import test
+      run: |
+        python -c "from psrn import PSRN_Regressor; print('Import Success')"
