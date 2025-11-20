@@ -8,3 +8,4 @@ notebooks/*
 model.pt
 log/*
 *egg-info
+dist

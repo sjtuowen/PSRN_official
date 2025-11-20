@@ -38,13 +38,13 @@ import pandas as pd
     type=int,
     help="number of best expressions to take from PSRN to fit",
 )
-@click.option("--use_constant", "-c", default=False, type=bool, help="use const in PTS")
+@click.option("--use_constant", "-c", default=False, type=bool, help="use const in PSE")
 @click.option(
     "--probe",
     "-o",
     default=None,
     type=str,
-    help="expression probe, string, PTS will stop if probe is in pf",
+    help="expression probe, string, PSE will stop if probe is in pf",
 )
 @click.option(
     "--csvpath",

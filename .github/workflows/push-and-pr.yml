@@ -1,6 +1,17 @@
 name: Python Package Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
 
 jobs:
   build:
