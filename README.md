@@ -6,7 +6,7 @@
 **Prerequisite**: Python >=3.9, <=3.12
 
 ```bash
-pip install git+https://github.com/x66ccff/PSRN
+pip install psrn
 ```
 
 ## 📚 Citation
