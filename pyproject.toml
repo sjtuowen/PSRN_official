@@ -48,7 +48,7 @@ include = ["psrn*"]
 exclude = ["assets*"]
 
 [tool.setuptools.package-data]
-"psrn" = ["**/*.npy"]
+"psrn" = ["**/*.npy","**/*.csv"]
 
 [project.scripts]
 psrn-run = "psrn.cli:main"
