@@ -26,6 +26,7 @@ import yaml
 from ..utils.data import expr_to_Y_pred
 from ..utils.evaluate import get_sympy_complexity
 from ..utils.exprutils import time_limit, TimeoutException, has_nested_func
+from ..utils.gen_dr_mask import generate_dr_mask_core 
 
 from .token_generator.gp import GP_TokenGenerator
 
@@ -485,7 +486,7 @@ class PSRN_Regressor(nn.Module):
         n_symbol_layers=3,
         n_inputs=None,
         use_dr_mask=True,
-        dr_mask_dir="./dr_mask",
+        dr_mask_dir=None,
         use_const=False,
         use_extra_const=False,
         n_sample_variables=None,
@@ -495,6 +496,9 @@ class PSRN_Regressor(nn.Module):
         device="cuda",
     ):
         super(PSRN_Regressor, self).__init__()
+        
+        current_file_path = os.path.abspath(__file__)
+        package_root = os.path.dirname(os.path.dirname(current_file_path))
 
         self.stages_config = stage_config
 
@@ -544,47 +548,71 @@ class PSRN_Regressor(nn.Module):
             self.operators_op.append(op())
 
         self.use_dr_mask = use_dr_mask
+        
+        # 确定 Mask 的文件名 (统一格式: layers_inputs_[Op1_Op2]_mask.npy)
+        ops_str = "_".join(self.operators)
+        file_name_mask = f'{self.n_symbol_layers}_{self.n_inputs}_[{ops_str}]_mask.npy'
 
         if self.use_dr_mask:
-            self.dr_mask_dir = dr_mask_dir
-            if not os.path.exists(self.dr_mask_dir):
-                raise ValueError(
-                    "dr_mask_dir not exist, got {}".format(self.dr_mask_dir)
-                )
-            file_name_mask = f'{self.n_symbol_layers}_{self.n_inputs}_[{"_".join(self.operators)}]_mask.npy'
-            self.dr_mask_path = self.dr_mask_dir + "/" + file_name_mask
-            if not os.path.exists(self.dr_mask_path):
-                cmd = 'python utils/gen_dr_mask.py --n_symbol_layers={} --n_inputs={} --ops="{}"'.format(
-                    self.n_symbol_layers,
-                    self.n_inputs,
-                    str(self.operators).replace(" ", ""),
-                )
-                print(
-                    "dr_mask file not exist, got {}.\nPlease run `{}`".format(
-                        self.dr_mask_path, cmd
-                    )
-                )
-                print("=" * 40)
-                print("Executing Automatically (dr mask gen) ....")
-                print("cmd:")
-                print(cmd)
-                os.system(cmd)
-                print("Execute finished (dr mask gen) ....")
-                print("=" * 40)
+            # 3.1 确定目录策略
+            # 策略 A: 如果用户指定了目录，就用用户的
+            if dr_mask_dir is not None:
+                self.dr_mask_dir = dr_mask_dir
+            else:
+                # 策略 B: 尝试使用包内的 dr_mask 目录
+                self.dr_mask_dir = os.path.join(package_root, 'dr_mask')
+            
+            self.dr_mask_path = os.path.join(self.dr_mask_dir, file_name_mask)
 
-            print("loading drmask from ", self.dr_mask_path)
-            dr_mask = np.load(self.dr_mask_path)
-            print("load finished")
-            dr_mask = torch.from_numpy(dr_mask)
-            print("to numpy finished")
-            assert dr_mask.dim() == 1, "dr_mask should be 1-dim, got {}".format(
-                dr_mask.dim()
-            )
+            # 3.2 检查文件是否存在，不存在则生成
+            if not os.path.exists(self.dr_mask_path):
+                print(f"[Info] DR Mask not found at: {self.dr_mask_path}")
+                print("Generating mask automatically...")
+
+                try:
+                    # 尝试在当前指定的目录下生成 (如果是 site-packages 可能会失败)
+                    generate_dr_mask_core(
+                        n_symbol_layers=self.n_symbol_layers,
+                        n_inputs=self.n_inputs,
+                        ops=self.operators, # 直接传 list
+                        save_dir=self.dr_mask_dir,
+                        device="cuda" if torch.cuda.is_available() else "cpu"
+                    )
+                except (PermissionError, OSError):
+                    # 3.3 权限不足的回退策略
+                    print(f"[Warning] No permission to write to {self.dr_mask_dir} (likely installed in system path).")
+                    print("[Info] Fallback: Generating mask in current working directory './dr_mask'")
+                    
+                    # 更改目录到当前工作目录
+                    self.dr_mask_dir = os.path.abspath("./dr_mask")
+                    self.dr_mask_path = os.path.join(self.dr_mask_dir, file_name_mask)
+                    
+                    generate_dr_mask_core(
+                        n_symbol_layers=self.n_symbol_layers,
+                        n_inputs=self.n_inputs,
+                        ops=self.operators,
+                        save_dir=self.dr_mask_dir,
+                        device="cuda" if torch.cuda.is_available() else "cpu"
+                    )
+                
+                print("Generation finished.")
+
+            # 3.4 加载 Mask
+            print(f"Loading drmask from {self.dr_mask_path}")
+            try:
+                dr_mask_np = np.load(self.dr_mask_path)
+                dr_mask = torch.from_numpy(dr_mask_np)
+                assert dr_mask.dim() == 1, f"dr_mask should be 1-dim, got {dr_mask.dim()}"
+                print("Load finished.")
+            except Exception as e:
+                print(f"[Error] Failed to load mask: {e}")
+                raise
         else:
             dr_mask = None
             print("[INFO] use_dr_mask=False. May use more VRAM.")
 
-        print(self.stages_config)
+        if self.stages_config:
+            pass # print(self.stages_config)
 
         self.net = PSRN(
             n_variables=self.n_inputs,
@@ -712,7 +740,7 @@ class PSRN_Regressor(nn.Module):
             self.feature_names = list(X.columns)
 
             X = X.values
-            X = torch.from_numpy(X).float()
+            X = torch.from_numpy(X).to(torch.float32)
 
         else:
             self.feature_names = ["x{}".format(i) for i in range(X.shape[1])]
@@ -735,9 +763,9 @@ class PSRN_Regressor(nn.Module):
 
         if isinstance(Y, pd.DataFrame):
             Y = Y.values
-            Y = torch.from_numpy(Y).float().reshape(-1, 1)
+            Y = torch.from_numpy(Y).to(torch.float32).reshape(-1, 1)
         if isinstance(Y, np.ndarray):
-            Y = torch.from_numpy(Y).float().reshape(-1, 1)
+            Y = torch.from_numpy(Y).to(torch.float32).reshape(-1, 1)
         assert isinstance(
             X, torch.Tensor
         ), "X must be torch tensor, got {}, X:\n\n {}".format(type(X), X)

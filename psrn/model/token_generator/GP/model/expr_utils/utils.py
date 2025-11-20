@@ -37,7 +37,8 @@ def get_expression(strs: str) -> Expression:
         "Abs": Expression(1, np.abs, lambda x: f"abs({x})"),
         "Tanh": Expression(1, np.tanh, lambda x: f"tanh({x})"),
         "sqrt": Expression(1, np.sqrt, lambda x: f"({x})**0.5"),
-        "N2": Expression(1, np.square, lambda x: f"({x})**2"),
+        "Pow2": Expression(1, np.square, lambda x: f"({x})**2"),
+        "Pow3": Expression(1, np.square, lambda x: f"({x})**3"),
         "Pi": Expression(1, np.pi, lambda x: f"pi*({x})/({x})"),
         "One": Expression(1, 1, lambda x: f"({x})/({x})"),
     }

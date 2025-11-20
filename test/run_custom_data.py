@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append(".")
-
 import os
 import click
 import time
@@ -9,8 +5,6 @@ import numpy as np
 import sympy as sp
 import pandas as pd
 
-
-from utils.data import expr_to_Y_pred
 
 
 @click.command()
@@ -115,7 +109,7 @@ def main(
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
 
     import torch
-    from model.regressor import PSRN_Regressor
+    from psrn import PSRN_Regressor
 
     if not use_cpu:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -147,15 +141,8 @@ def main(
 
     variables_name = [f"x{i}" for i in range(Input.shape[1])]
 
-    Input = torch.from_numpy(Input).to(device).to(torch.float32)
-    Output = torch.from_numpy(Output).to(device).to(torch.float32)
-
-    print(Input.shape, Output.shape)
-    print(Input.dtype, Output.dtype)
-
     regressor = PSRN_Regressor(
         variables=variables_name,
-        dr_mask_dir="./dr_mask",
         use_const=use_constant,
         device=device,
         token_generator_config={
