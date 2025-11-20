@@ -1,12 +1,10 @@
 import math
-import itertools
 import re
 
 import os
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 import time
 import gc
@@ -549,41 +547,33 @@ class PSRN_Regressor(nn.Module):
 
         self.use_dr_mask = use_dr_mask
         
-        # 确定 Mask 的文件名 (统一格式: layers_inputs_[Op1_Op2]_mask.npy)
         ops_str = "_".join(self.operators)
         file_name_mask = f'{self.n_symbol_layers}_{self.n_inputs}_[{ops_str}]_mask.npy'
 
         if self.use_dr_mask:
-            # 3.1 确定目录策略
-            # 策略 A: 如果用户指定了目录，就用用户的
             if dr_mask_dir is not None:
                 self.dr_mask_dir = dr_mask_dir
             else:
-                # 策略 B: 尝试使用包内的 dr_mask 目录
                 self.dr_mask_dir = os.path.join(package_root, 'dr_mask')
             
             self.dr_mask_path = os.path.join(self.dr_mask_dir, file_name_mask)
 
-            # 3.2 检查文件是否存在，不存在则生成
             if not os.path.exists(self.dr_mask_path):
                 print(f"[Info] DR Mask not found at: {self.dr_mask_path}")
                 print("Generating mask automatically...")
 
                 try:
-                    # 尝试在当前指定的目录下生成 (如果是 site-packages 可能会失败)
                     generate_dr_mask_core(
                         n_symbol_layers=self.n_symbol_layers,
                         n_inputs=self.n_inputs,
-                        ops=self.operators, # 直接传 list
+                        ops=self.operators,
                         save_dir=self.dr_mask_dir,
                         device="cuda" if torch.cuda.is_available() else "cpu"
                     )
                 except (PermissionError, OSError):
-                    # 3.3 权限不足的回退策略
                     print(f"[Warning] No permission to write to {self.dr_mask_dir} (likely installed in system path).")
                     print("[Info] Fallback: Generating mask in current working directory './dr_mask'")
                     
-                    # 更改目录到当前工作目录
                     self.dr_mask_dir = os.path.abspath("./dr_mask")
                     self.dr_mask_path = os.path.join(self.dr_mask_dir, file_name_mask)
                     
@@ -597,7 +587,6 @@ class PSRN_Regressor(nn.Module):
                 
                 print("Generation finished.")
 
-            # 3.4 加载 Mask
             print(f"Loading drmask from {self.dr_mask_path}")
             try:
                 dr_mask_np = np.load(self.dr_mask_path)
@@ -729,8 +718,6 @@ class PSRN_Regressor(nn.Module):
                 )
             )
         # self.drm
-        print("len(self.triu_ls):")
-        print(len(self.triu_ls))
         print("=" * 40)
 
         print("num of samples:", len(X))

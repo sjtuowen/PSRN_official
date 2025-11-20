@@ -1,12 +1,8 @@
 import numpy as np
-
 import sympy
 import math
-from .data import get_dynamic_data, expr_to_Y_pred
 
-
-from .exprutils import time_limit, TimeoutException
-
+from .exprutils import time_limit
 
 def get_sympy_complexity(expr_str):
     complexity_dict = {
@@ -37,7 +33,7 @@ def get_sympy_complexity(expr_str):
             complexity = eval(ops_visual_str, complexity_dict)
             return complexity
     except Exception as e:
-
+        print('ERR in get_sympy_complexity:', e)
         return 1e99
 
 

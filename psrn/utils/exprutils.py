@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 import threading
 import _thread
-from sympy import Symbol, sin, cos, exp, log, count_ops
+from sympy import sin, cos, exp, log
 import sympy as sp
 
 

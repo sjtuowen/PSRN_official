@@ -7,8 +7,6 @@ import itertools
 from .GP.model.config import Config
 from .GP.model.pipeline import Pipeline
 import sympy as sp
-import random
-import itertools
 from collections import Counter
 from ...utils.exprutils import has_nested_func
 MAX_LEN_SET = 1000

@@ -4,7 +4,6 @@ import numpy as np
 import sympy
 from tqdm import tqdm
 import click
-import ast
 
 try:
     from ..model.models import PSRN
@@ -28,10 +27,7 @@ def generate_dr_mask_core(n_symbol_layers, n_inputs, ops, save_dir="./dr_mask", 
         elif ops == "koza_sign":
             ops = ["Add", "Mul", "Sub", "Div", "Identity", "Sign"]
         else:
-            try:
-                ops = ast.literal_eval(ops)
-            except:
-                ops = eval(ops)
+            ops = eval(ops)
             
             if not isinstance(ops, list):
                 raise ValueError(f"Ops must be a list, got {type(ops)}: {ops}")

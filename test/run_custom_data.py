@@ -1,7 +1,6 @@
 import os
 import click
 import time
-import numpy as np
 import sympy as sp
 import pandas as pd
 
