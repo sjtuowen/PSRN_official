@@ -35,6 +35,7 @@ dependencies = [
     "numba",
     "tqdm",
     "scipy",
+    "click",
     "symengine==0.11.0"
 ]
 
