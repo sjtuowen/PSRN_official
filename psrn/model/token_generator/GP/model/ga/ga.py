@@ -32,7 +32,8 @@ class GAPipeline:
         Initializing the tokens of genetic algorithm
         """
         for num, exp in self.exp_dict.items():
-            if not isinstance(exp, Expression): continue
+            if not isinstance(exp, Expression):
+                continue
             if exp.child == 0:
                 pset.renameArguments(**{f'ARG{var_count}': f"exp{num}"})
                 var_count += 1
@@ -70,7 +71,8 @@ class GAPipeline:
         hof = tools.HallOfFame(20)
         pops = pop_init
         pop = self.config_s.gp.pops
-        if len(pops) >= pop // 2: pops = random.sample(pops, pop // 2)
+        if len(pops) >= pop // 2:
+            pops = random.sample(pops, pop // 2)
         pops = [creator.Individual(tokens_to_deap(p, self.pset)) for p in pops]
         pops += self.toolbox.population(n=pop - len(pops))
         _ = algorithms.eaSimple(pops, self.toolbox, self.config_s.gp.cxpb, self.config_s.gp.mutpb,

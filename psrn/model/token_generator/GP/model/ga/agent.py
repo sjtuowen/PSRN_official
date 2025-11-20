@@ -9,7 +9,6 @@ from functools import lru_cache
 
 from numba import jit
 import numpy as np
-from functools import lru_cache
 from deap import gp
 
 import array

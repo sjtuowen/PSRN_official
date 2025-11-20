@@ -9,7 +9,6 @@ from scipy.optimize import minimize
 
 from ..config import Config
 from ..expr_utils.utils import time_limit, FinishException
-from numpy import inf, seterr
 
 from symengine import sympify as se_sympify
 

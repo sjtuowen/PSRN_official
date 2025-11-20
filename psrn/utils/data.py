@@ -87,42 +87,6 @@ def generate_X(ranges, down_sample, distrib="U"):
     return points
 
 
-def get_dynamic_data(dataset_name, file_name):
-    """
-    return dataset df, variables name and target name
-
-    Example
-    =======
-
-    >>> df, variables_name, target_name = get_dynamic_data('ball','Baseball_train')
-    >>> variables_name
-    >>> ['t']
-    >>> target_name
-    >>> 'h'
-    """
-    df = pd.read_csv("./data/" + dataset_name + "/" + file_name + ".csv", header=None)
-    # NOTE: If use your own dataset, the column name cannot be `C` or `B`,
-    # because it's used as constant symbol in regressor
-    # And none of the variables can be capitalized, because there is a Lower case in eval
-    if dataset_name == "custom":
-        names = ["x", "y"]
-        target_name = "y"
-    elif dataset_name == "emps":
-        names = ["q", "qdot", "qddot", "tau"]
-        target_name = "qddot"
-    elif dataset_name == "roughpipe":
-        names = ["l", "y", "k"]
-        target_name = "y"
-    else:
-        raise ValueError("dataset_name error")
-
-    df.columns = names
-    variables_name = names.copy()
-    variables_name.remove(target_name)
-
-    return df, variables_name, target_name
-
-
 def expr_to_Y_pred(expr_sympy, X, variables):
     functions = {
         "sin": np.sin,
