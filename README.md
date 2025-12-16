@@ -100,10 +100,16 @@ To customize the operator library:
 psrn-run -g 0 -i 5 -c False --probe "(exp(x)-exp(-x))/2" -l "['Add','Mul','Identity','Tanh','Abs']"
 ```
 
-For custom data paths and operators:
+**For custom data paths and operators:**
 
 ```bash
-psrn-run -g 0 -i 5 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" --csvpath ./your_data.csv
+psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
+```
+
+You can also reduce the number of layers to save VRAM (default is 3)
+
+```bash
+psrn-run --csvpath ./your_data_with_many_cols.csv --n_symbol_layers 2 -g 0 -i 5 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
 ```
 
 ## 📝 Python Examples
@@ -125,6 +131,7 @@ default_csv = os.path.join(os.path.dirname(__file__), 'data', 'custom_data.csv')
 @click.option("--experiment_name", default="_", type=str, help="experiment_name")
 @click.option("--gpu_index", "-g", default=0, type=int, help="gpu index used")
 @click.option("--operators","-l",default="['Add','Mul','Sub','Div','Identity','Sin','Cos','Exp','Log']",help="operator library")
+@click.option("--n_symbol_layers",default=3,type=int,help="number of symbol layers (default=3)")
 @click.option("--n_down_sample","-d",default=100,type=int,help="n sample to downsample in PSRN for speeding up")
 @click.option("--n_inputs","-i",default=5,type=int,help="PSRN input size (n variables + n constants)")
 @click.option("--seed", "-s", default=0, type=int, help="seed")

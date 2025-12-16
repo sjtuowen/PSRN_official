@@ -17,6 +17,12 @@ default_csv = os.path.join(os.path.dirname(__file__), 'data', 'custom_data.csv')
     help="operator library",
 )
 @click.option(
+    "--n_symbol_layers",
+    default=3,
+    type=int,
+    help="number of symbol layers (default=3)",
+)
+@click.option(
     "--n_down_sample",
     "-d",
     default=100,
@@ -64,6 +70,7 @@ def main(
     experiment_name,
     gpu_index,
     operators,
+    n_symbol_layers,
     n_down_sample,
     n_inputs,
     seed,
@@ -144,6 +151,7 @@ def main(
     regressor = PSRN_Regressor(
         variables=variables_name,
         use_const=use_constant,
+        n_symbol_layers=n_symbol_layers,
         device=device,
         token_generator_config={
             "base": {
