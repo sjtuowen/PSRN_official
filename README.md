@@ -46,6 +46,7 @@ Now, you can use `psrn-run` with custom data, use the following arguments:
   -q, --csvpath TEXT           path to custom csv file
 
   -l, --operators         operator library (e.g., "['Add','Mul','Identity','Tanh','Abs']")
+  --n_symbol_layers            number of symbol layers (default=3)
   -i, --n_inputs INTEGER       PSRN input size (n variables + n constants)
   -c, --use_constant BOOLEAN   use const in PSE
 
@@ -79,37 +80,38 @@ For more detailed parameter settings, please use `psrn-run --help`
 To run the script with build-in custom data with an expression probe (the algorithm will stop when it finds the expression or its symbolic equivalents):
 
 ```bash
-psrn-run -g 0 -i 5 -c False --probe "(exp(x)-exp(-x))/2"
+psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False --probe "(exp(x)-exp(-x))/2"
 ```
 
 Without an expression probe:
 
 ```bash
-psrn-run -g 0 -i 5 -c False
+psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False
 ```
 
 For limited VRAM (or when the ground truth expression is expected to be simple):
 
 ```bash
-psrn-run -g 0 -i 3 -c False --probe "(exp(x)-exp(-x))/2"
+psrn-run --csvpath ./your_data.csv -g 0 -i 3 -c False --probe "(exp(x)-exp(-x))/2"
 ```
 
 To customize the operator library:
 
 ```bash
-psrn-run -g 0 -i 5 -c False --probe "(exp(x)-exp(-x))/2" -l "['Add','Mul','Identity','Tanh','Abs']"
+psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False --probe "(exp(x)-exp(-x))/2" -l "['Add','Mul','Identity','Tanh','Abs']"
 ```
 
-**For custom data paths and operators:**
+For custom data paths and operators:
 
 ```bash
 psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
 ```
 
-You can also reduce the number of layers to save VRAM (default is 3)
+**You can also reduce the number of layers to save VRAM (default is 3)
+so that you can use more inputs**
 
 ```bash
-psrn-run --csvpath ./your_data_with_many_cols.csv --n_symbol_layers 2 -g 0 -i 5 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
+psrn-run --csvpath ./many_cols.csv --n_symbol_layers 2 -g 0 -i 30 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
 ```
 
 ## 📝 Python Examples
@@ -164,6 +166,7 @@ def main(experiment_name, gpu_index, operators, n_down_sample, n_inputs, seed, t
     regressor = PSRN_Regressor(
         variables=variables_name,
         use_const=use_constant,
+        n_symbol_layers=n_symbol_layers,
         device=device,
         token_generator_config={
             "base": {
