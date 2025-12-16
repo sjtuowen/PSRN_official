@@ -108,11 +108,28 @@ psrn-run --csvpath ./your_data.csv -g 0 -i 5 -c False -l "['Add','Mul','SemiSub'
 ```
 
 **You can also reduce the number of layers to save VRAM (default is 3)
-so that you can use more inputs**
+so that you can use more inputs  (e.g. 30 input PSRN, the rest 20 will be base subtrees)** 
 
 ```bash
 psrn-run --csvpath ./many_cols.csv --n_symbol_layers 2 -g 0 -i 30 -c False -l "['Add','Mul','SemiSub','SemiDiv','Identity']" 
 ```
+
+If you want to change the source code, please use the following steps:
+
+clone the repo first 
+```bash
+git clone https://github.com/x66ccff/PSRN
+```
+
+then install the repo with edit mode
+```bash
+cd PSRN
+pip install -e .
+```
+
+The `cli.py` is the entrance of the code, and you can change the `PSRN_Regressior` in `regressor.py`
+
+
 
 ## 📝 Python Examples
 
@@ -226,4 +243,5 @@ If you use this work, please cite:
   url        = {https://www.nature.com/articles/s43588-025-00904-8}
 }
 ```
+
 
