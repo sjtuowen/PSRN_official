@@ -93,6 +93,7 @@ def expr_to_Y_pred(expr_sympy, X, variables):
         "cos": np.cos,
         "tan": np.tan,
         "exp": np.exp,
+        "sigmoid": lambda x: 1 / (1 + np.exp(-x)),
         "log": np.log,
         "sqrt": np.sqrt,
         "sinh": np.sinh,

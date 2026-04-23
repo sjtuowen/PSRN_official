@@ -40,9 +40,11 @@ def get_expression(strs: str) -> Expression:
         "Tanh": Expression(1, np.tanh, lambda x: f"tanh({x})"),
         "sqrt": Expression(1, np.sqrt, lambda x: f"({x})**0.5"),
         "Pow2": Expression(1, np.square, lambda x: f"({x})**2"),
-        "Pow3": Expression(1, np.square, lambda x: f"({x})**3"),
+        "Pow3": Expression(1, lambda x: np.power(x, 3), lambda x: f"({x})**3"),
         "Pi": Expression(1, np.pi, lambda x: f"pi*({x})/({x})"),
         "One": Expression(1, 1, lambda x: f"({x})/({x})"),
+        "Sigmoid": Expression(1, lambda x: 1 / (1 + np.exp(-x)), lambda x: f"sigmoid({x})"),
+
     }
     if strs in exp_dict:
         temp = exp_dict[strs]

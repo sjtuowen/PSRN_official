@@ -254,7 +254,7 @@ class Sigmoid_op:
         self.is_directed = True
 
     def get_expr(self, sub_expr):
-        return "(1/(1+exp(-({}))))".format(sub_expr)
+        return "sigmoid({})".format(sub_expr)
 
     def transform_inputs(self, x):
         return 1 / (1 + torch.exp(-x))

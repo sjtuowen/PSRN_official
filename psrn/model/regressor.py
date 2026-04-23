@@ -62,6 +62,19 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+SIGMOID_FUNC = sympy.Function("sigmoid")
+
+
+def safe_sympify(expr):
+    return sympy.sympify(expr, locals={"sigmoid": SIGMOID_FUNC})
+
+
+def safe_se_sympify(expr):
+    try:
+        return se_sympify(expr)
+    except Exception:
+        return safe_sympify(expr)
+
 
 def run_stages(config, reg):
     default = config["default"]
@@ -131,7 +144,7 @@ def condense(eq, *x):
 
 def densify(expr_c, variables):
     variables_sympy = [sympy.Symbol(v) for v in variables]
-    expr_c_sympy = sympy.sympify(expr_c)
+    expr_c_sympy = safe_sympify(expr_c)
     expr_c_dense_sympy, dense_dict = condense(expr_c_sympy, *variables_sympy)
     value_ls = []
     name_ls = []
@@ -261,7 +274,7 @@ def to_C_expr(expr, variables, use_replace_exponent=False):
         expr_num = replace_exponent(expr_num)
         print("replaced:", expr_num)
 
-    ops = ["sin", "cos", "tan", "log", "asin", "acos", "atan", "sign"]
+    ops = ["sin", "cos", "tan", "sigmoid", "log", "asin", "acos", "atan", "sign"]
     for op in ops:
         expr_num = expr_num.replace(op, "C*{}".format(op))
     for variable in variables:
@@ -302,9 +315,9 @@ def get_expr_C_and_C0(expr, variables, add_bias=True, use_replace_exponent=False
     into an expr_c expression with a constant placeholder
     and the corresponding constant initial value C0
     """
-    expr_sympy = sympy.sympify(expr)
+    expr_sympy = safe_sympify(expr)
     expr_c = to_C_expr(expr_sympy, variables, use_replace_exponent=use_replace_exponent)
-    expr_c_sympy = sympy.sympify(expr_c)
+    expr_c_sympy = safe_sympify(expr_c)
     expr_c_sympy, dict_c = densify(expr_c_sympy, variables)
     if add_bias:
         expr_c_sympy = insert_B_on_Add(expr_c_sympy)
@@ -312,7 +325,7 @@ def get_expr_C_and_C0(expr, variables, add_bias=True, use_replace_exponent=False
     expr_c_sympy_str, cnt_B = replace_B(expr_c_sympy_str)
     for i in range(cnt_B):
         dict_c[sympy.Symbol("B{}".format(i))] = 0.0
-    expr_c_sympy = sympy.sympify(expr_c_sympy_str)
+    expr_c_sympy = safe_sympify(expr_c_sympy_str)
     expr_dense_sympy, dict_final = finallize_const_name(
         expr_c_sympy, dict_c, add_bias=True
     )
@@ -324,7 +337,7 @@ def get_expr_C_and_C0(expr, variables, add_bias=True, use_replace_exponent=False
 
 def set_real(expr_c_sympy):
     """Set all free variables of the expression to real numbers"""
-    expr_c_sympy = sympy.sympify(expr_c_sympy)
+    expr_c_sympy = safe_sympify(expr_c_sympy)
     for var in expr_c_sympy.free_symbols:
         expr_c_sympy = expr_c_sympy.subs(var, sympy.Symbol(str(var), real=True))
     return expr_c_sympy
@@ -379,6 +392,7 @@ def recal_MSE(expr_str, X, Y, variables):
         "cos": np.cos,
         "tan": np.tan,
         "exp": np.exp,
+        "sigmoid": lambda x: 1 / (1 + np.exp(-x)),
         "log": np.log,
         "sqrt": np.sqrt,
         "sinh": np.sinh,
@@ -1158,6 +1172,7 @@ class PSRN_Regressor(nn.Module):
                 "cos": np.cos,
                 "tan": np.tan,
                 "exp": np.exp,
+                "sigmoid": lambda x: 1 / (1 + np.exp(-x)),
                 "log": np.log,
                 "sqrt": np.sqrt,
                 "sinh": np.sinh,
@@ -1185,7 +1200,7 @@ class PSRN_Regressor(nn.Module):
         # Because of the Piecewise problems in the sympy,
         # a special judgment was made on the sign
         if "sign" in expr_str or not together:
-            expr_num = sympy.sympify(se_sympify(expr_str))
+            expr_num = safe_sympify(safe_se_sympify(expr_str))
         else:
             expr_num = sympy.simplify(expr_str)
 
@@ -1350,7 +1365,7 @@ class PSRN_Regressor(nn.Module):
         try:
             with time_limit(1, "sleep"):
                 expr = self.set_real(
-                    sympy.sympify(self.remove_one_coeffs(sympy.S(expr))),
+                    safe_sympify(self.remove_one_coeffs(sympy.S(expr))),
                     self.is_positive,
                 )
                 # expr = self.set_real(sympy.sympify(self.remove_one_coeffs(str(expr))), self.is_positive)
@@ -1363,7 +1378,7 @@ class PSRN_Regressor(nn.Module):
             return False
 
     def my_simplify(self, expr_str, use_together):
-        expr_sympy = se_sympify(expr_str)
+        expr_sympy = safe_se_sympify(expr_str)
         expr_sympy = set_real(expr_sympy)
         if use_together:
             return sympy.cancel(sympy.together(expr_sympy))
@@ -1499,8 +1514,8 @@ class PSRN_Regressor(nn.Module):
         gs_X = []
         for g in g_list:
             try:
-                g_sympy = se_sympify(g)
-            except RuntimeError:
+                g_sympy = safe_se_sympify(g)
+            except Exception:
                 g_sympy = sympy.S("1")
             g_X = expr_to_Y_pred(g_sympy, X, variables)  # -> [n, 1]
             gs_X.append(g_X)
@@ -1561,7 +1576,7 @@ class PSRN_Regressor(nn.Module):
 
                         if self.prun_const:
                             try:
-                                final_c = sympy.sympify(se_sympify(str(final_c)))
+                                final_c = safe_sympify(safe_se_sympify(str(final_c)))
                                 final_c = prun_constant(final_c, self.prun_ndigit)
                             except Exception as e:
                                 print("prun_constant error", e)

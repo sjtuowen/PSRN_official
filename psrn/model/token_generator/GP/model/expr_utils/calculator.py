@@ -15,6 +15,19 @@ from symengine import sympify as se_sympify
 from functools import lru_cache
 import re
 
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
+def safe_sympify(symbols):
+    """Use symengine when possible, fallback to sympy for custom functions like sigmoid."""
+    try:
+        return se_sympify(symbols)
+    except Exception:
+        return sp.sympify(symbols, locals={"sigmoid": sp.Function("sigmoid")})
+
+
 def process_symbol_with_C(symbols: str, c: np.ndarray) -> str:
     """
     Replacing parameter placeholders with real parameters
@@ -55,12 +68,13 @@ def prune_poly_c(eq: str) -> str:
                 eq = eq.replace('sqrt(C)', 'C')
                 eq = eq.replace('log(C)', 'C')
                 eq = eq.replace('exp(C)', 'C')
+                eq = eq.replace('sigmoid(C)', 'C')
                 eq = eq.replace('C*C', 'C')
             # eq = str(sp.sympify(eq))
             try:
-                eq = str(se_sympify(eq))
-            except SyntaxError:
-                eq = str(sp.sympify(eq))
+                eq = str(safe_sympify(eq))
+            except Exception:
+                eq = str(sp.sympify(eq, locals={"sigmoid": sp.Function("sigmoid")}))
         if eq == eq_l:
             break
     return eq
@@ -107,7 +121,7 @@ def cal_expression_single(symbols: str, x: np.ndarray, t: np.ndarray, c: Optiona
 
 @lru_cache(maxsize=128)
 def se_sympify_cached(symbols):
-    return se_sympify(symbols)
+    return safe_sympify(symbols)
 
 @lru_cache(maxsize=128)
 def prune_poly_c_cached(symbols):

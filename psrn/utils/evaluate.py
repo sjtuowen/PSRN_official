@@ -15,6 +15,8 @@ def get_sympy_complexity(expr_str):
         "COS": 3,
         "TAN": 3,
         "EXP": 3,
+        "SIGMOID": 6,
+        "FUNC_SIGMOID": 6,
         "LOG": 3,
         "SQRT": 3,
         "NEG": 1,
